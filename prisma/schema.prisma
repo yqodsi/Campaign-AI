@@ -1,0 +1,99 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  CANCELLED
+  COMPLETED
+}
+
+enum ScheduleType {
+  DAILY
+  WEEKLY
+}
+
+enum EmailStatus {
+  PENDING
+  GENERATING
+  READY
+  APPROVED
+  SENT
+  FAILED
+}
+
+model AIAgent {
+  id           String     @id @default(uuid())
+  name         String
+  systemPrompt String     @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  campaigns    Campaign[]
+}
+
+model Campaign {
+  id              String         @id @default(uuid())
+  name            String
+  status          CampaignStatus @default(DRAFT)
+  scheduleType    ScheduleType   @default(DAILY)
+  emailsPerDay    Int            @default(2)
+  selectedDays    Int[]          @default([1, 2, 3, 4, 5])
+  durationDays    Int            @default(30)
+  startDate       DateTime
+  timezone        String         @default("UTC")
+  aiAgentId       String
+  aiAgent         AIAgent        @relation(fields: [aiAgentId], references: [id])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  leads           Lead[]
+  scheduledEmails ScheduledEmail[]
+
+  @@index([status])
+  @@index([startDate])
+}
+
+model Lead {
+  id              String           @id @default(uuid())
+  email           String
+  firstName       String
+  lastName        String?
+  metadata        Json?            // Extra fields: company, phone, etc.
+  campaignId      String
+  campaign        Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  createdAt       DateTime         @default(now())
+  scheduledEmails ScheduledEmail[]
+
+  @@unique([email, campaignId])
+  @@index([campaignId])
+}
+
+model ScheduledEmail {
+  id               String      @id @default(uuid())
+  campaignId       String
+  campaign         Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  leadId           String
+  lead             Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  scheduledFor     DateTime
+  scheduleDay      Int         // Day 1, 2, 3... of the campaign
+  status           EmailStatus @default(PENDING)
+  generatedSubject String?
+  generatedBody    String?     @db.Text
+  sentAt           DateTime?
+  errorMessage     String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@unique([campaignId, leadId, scheduleDay])
+  @@index([status, scheduledFor])
+  @@index([campaignId, status])
+}
+
