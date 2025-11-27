@@ -39,28 +39,6 @@ docker-compose up --build
 http://localhost:3000
 ```
 
-### Local Development
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Setup environment
-cp .env.example .env
-# Configure DATABASE_URL, REDIS_URL, and OPENAI_API_KEY
-
-# 3. Start PostgreSQL and Redis
-# Ensure PostgreSQL is running on localhost:5432
-# Ensure Redis is running on localhost:6379
-
-# 4. Run database migrations
-npx prisma migrate dev
-
-# 5. Start development servers
-npm run dev:all
-# This starts both Next.js and the BullMQ worker
-```
-
 ## 📖 How It Works
 
 1. **Create AI Agents** - Define personality and writing style
