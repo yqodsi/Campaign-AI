@@ -163,55 +163,7 @@ CRON_SECRET="your-secret-key"
 - `GET /api/dashboard` - Dashboard statistics
 - `POST /api/cron/process` - Trigger campaign processing
 
-## 🧪 Testing
 
-Visit `/test` in your browser to access the scheduler test tool:
-
-- **Quick Test** - Schedule test emails for the next 15 minutes
-- **Simulation** - Preview what emails would be scheduled
-
-## 📊 Database Management
-
-```bash
-# Open Prisma Studio
-npm run db:studio
-
-# Create migration
-npm run db:migrate
-
-# Reset database (development only)
-npx prisma migrate reset
-```
-
-## 🚀 Production Deployment
-
-### Recommendations
-
-1. **Database**: Use managed PostgreSQL (AWS RDS, Supabase, etc.)
-2. **Redis**: Use Redis Cloud or AWS ElastiCache
-3. **Workers**: Deploy as separate containers/pods
-4. **Email Service**: Integrate SendGrid, Resend, or AWS SES
-5. **Monitoring**: Add Sentry for error tracking
-6. **Authentication**: Implement NextAuth.js or similar
-7. **Rate Limiting**: Add rate limiting for API endpoints
-
-### Docker Production Build
-
-```bash
-# Build production image
-docker build -t campaign-ai .
-
-# Run with production settings
-docker run -p 3000:3000 --env-file .env.production campaign-ai
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-MIT License - see LICENSE file for details
 
 ## 🙏 Acknowledgments
 
