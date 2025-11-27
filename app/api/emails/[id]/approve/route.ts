@@ -29,19 +29,19 @@ export async function POST(
     );
   }
 
-  // Mark as APPROVED
+  // Mark as approved
   await prisma.scheduledEmail.update({
     where: { id: params.id },
     data: { status: "APPROVED" },
   });
 
-  // Calculate delay until scheduled send time
+  // Figure out how long to wait before sending
   const delay = Math.max(
     0,
     new Date(scheduledEmail.scheduledFor).getTime() - Date.now()
   );
 
-  // Queue for sending at the scheduled time
+  // Schedule the send job
   await emailSendingQueue.add(
     "send",
     { scheduledEmailId: params.id },

@@ -57,6 +57,8 @@ const generationWorker = new Worker<EmailGenerationJob>(
         campaignName: scheduledEmail.campaign.name,
         emailNumber: scheduledEmail.scheduleDay,
         totalEmails: scheduledEmail.campaign.durationDays,
+        senderName: "Sales Team",
+        companyName: "GURD",
       });
 
       // Save generated content - mark as READY for review

@@ -30,8 +30,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Plus, Upload, Trash2 } from "lucide-react";
-import Papa from "papaparse";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ImportCampaignLeadsDialog } from "@/components/leads/import-campaign-leads-dialog";
 
 interface Lead {
   id: string;
@@ -48,7 +48,6 @@ export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [csvDialogOpen, setCsvDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     firstName: "",
@@ -143,53 +142,6 @@ export default function LeadsPage() {
     }
   };
 
-  const handleCsvImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    Papa.parse(file, {
-      header: true,
-      complete: async (results: Papa.ParseResult<any>) => {
-        try {
-          const res = await fetch(`/api/campaigns/${params.id}/leads/import`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(results.data),
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            toast({
-              title: "Success",
-              description: `Imported ${data.created} leads (${data.skipped} skipped)`,
-            });
-            setCsvDialogOpen(false);
-            fetchLeads();
-          } else {
-            toast({
-              title: "Error",
-              description: "Failed to import leads",
-              variant: "destructive",
-            });
-          }
-        } catch (error) {
-          toast({
-            title: "Error",
-            description: "Failed to import leads",
-            variant: "destructive",
-          });
-        }
-      },
-      error: (error: Error) => {
-        toast({
-          title: "Error",
-          description: `CSV parsing error: ${error.message}`,
-          variant: "destructive",
-        });
-      },
-    });
-  };
-
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -216,26 +168,10 @@ export default function LeadsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={csvDialogOpen} onOpenChange={setCsvDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Upload className="h-4 w-4 mr-2" />
-                Import CSV
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Import Leads from CSV</DialogTitle>
-                <DialogDescription>
-                  Upload a CSV file with columns: email, firstName, lastName
-                  (optional)
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input type="file" accept=".csv" onChange={handleCsvImport} />
-              </div>
-            </DialogContent>
-          </Dialog>
+          <ImportCampaignLeadsDialog
+            campaignId={params.id as string}
+            onSuccess={fetchLeads}
+          />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button>

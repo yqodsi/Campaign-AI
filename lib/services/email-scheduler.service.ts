@@ -36,13 +36,13 @@ async function processCampaign(campaign: any) {
   const campaignTzNow = toZonedTime(now, campaign.timezone);
   const campaignStart = new Date(campaign.startDate);
 
-  // Check if campaign has started
+  // Skip campaigns that start in the future
   if (now < campaignStart) {
     console.log(`[Scheduler] Campaign ${campaign.id} hasn't started yet`);
     return;
   }
 
-  // Check if campaign duration exceeded
+  // Stop campaigns that have run their full course
   const daysSinceStart = Math.floor(
     (now.getTime() - campaignStart.getTime()) / (1000 * 60 * 60 * 24)
   );
@@ -55,7 +55,7 @@ async function processCampaign(campaign: any) {
     return;
   }
 
-  // For WEEKLY, check if today is a selected day
+  // Weekly campaigns only run on selected weekdays
   if (campaign.scheduleType === "WEEKLY") {
     const todayDow = getDay(campaignTzNow); // 0=Sun, 1=Mon, etc.
     if (!campaign.selectedDays.includes(todayDow)) {
@@ -64,14 +64,14 @@ async function processCampaign(campaign: any) {
     }
   }
 
-  // Calculate schedule day based on campaign type
+  // Figure out which schedule day we’re on
   let scheduleDay: number;
 
   if (campaign.scheduleType === "WEEKLY") {
-    // For weekly: count only scheduled days that have occurred
+    // Weekly: count only the days the campaign was set to run
     const startDate = new Date(campaign.startDate);
 
-    // Count how many scheduled days have passed since start
+    // Walk through each day since the start and count the eligible ones
     let scheduledDaysCount = 0;
     for (let i = 0; i <= daysSinceStart; i++) {
       const checkDate = new Date(startDate);
@@ -84,7 +84,7 @@ async function processCampaign(campaign: any) {
     }
     scheduleDay = scheduledDaysCount;
   } else {
-    // For daily: use actual day count
+    // Daily: simply use elapsed days
     scheduleDay = daysSinceStart + 1;
   }
 
@@ -92,7 +92,7 @@ async function processCampaign(campaign: any) {
     `[Scheduler] Campaign ${campaign.id} is on schedule day ${scheduleDay}`
   );
 
-  // Schedule emails for each lead
+  // Bail out if no leads were assigned
   if (campaign.leads.length === 0) {
     console.log(
       `[Scheduler] Campaign ${campaign.id} has no leads. Add leads to the campaign first.`
@@ -100,14 +100,13 @@ async function processCampaign(campaign: any) {
     return;
   }
 
-  // Send emailsPerDay emails on this day
+  // Send the configured number of emails per lead
   const emailsToSend = campaign.emailsPerDay;
 
   for (const lead of campaign.leads) {
-    // Schedule multiple emails for this day (if emailsPerDay > 1)
+    // Space out multiple sends on the same day
     for (let emailIndex = 0; emailIndex < emailsToSend; emailIndex++) {
-      // Create unique scheduleDay for each email on the same day
-      // Format: baseDay * 10000 + emailIndex (e.g., day 1 email 0 = 10000, day 1 email 1 = 10001)
+      // Encode scheduleDay as baseDay * 10000 + emailIndex
       const emailScheduleDay = scheduleDay * 10000 + emailIndex;
       await scheduleEmailForLead(
         campaign,
@@ -127,7 +126,7 @@ async function scheduleEmailForLead(
   emailIndex: number = 0,
   totalEmailsToday: number = 1
 ) {
-  // Check idempotency - already scheduled?
+  // Skip if this lead already has an email for that slot
   const existing = await prisma.scheduledEmail.findUnique({
     where: {
       campaignId_leadId_scheduleDay: {
@@ -145,8 +144,7 @@ async function scheduleEmailForLead(
     return;
   }
 
-  // Calculate send time: distribute emails throughout the day
-  // For multiple emails per day, space them out (e.g., 9am, 2pm, 6pm)
+  // Space sends throughout the day (e.g., 9am, 2pm, 6pm)
   const now = new Date();
   const campaignTzNow = toZonedTime(now, campaign.timezone);
   const hoursInDay = 24;
@@ -155,27 +153,27 @@ async function scheduleEmailForLead(
   const sendHour = Math.floor(9 + emailIndex * intervalHours); // Start at 9am, distribute from there
   const sendMinute = emailIndex * 15; // Stagger by 15 minutes
 
-  // Get the date components in the campaign's timezone
+  // Build the send timestamp in the campaign timezone
   const year = campaignTzNow.getFullYear();
   const month = campaignTzNow.getMonth() + 1;
   const day = campaignTzNow.getDate();
 
-  // Create a date string in the campaign timezone: "YYYY-MM-DDTHH:mm:ss"
+  // Compose the ISO string
   const dateStringInTz = `${year}-${String(month).padStart(2, "0")}-${String(
     day
   ).padStart(2, "0")}T${String(sendHour).padStart(2, "0")}:${String(
     sendMinute
   ).padStart(2, "0")}:00`;
 
-  // Convert from campaign timezone to UTC for storage
+  // Convert to UTC before saving
   const scheduledFor = fromZonedTime(dateStringInTz, campaign.timezone);
 
-  // If calculated time is in the past, send now with small delay
+  // If the slot already passed today, push it a bit forward
   if (scheduledFor < now) {
     scheduledFor.setTime(now.getTime() + emailIndex * 60000 * 5); // 5 min apart if past
   }
 
-  // Create scheduled email
+  // Persist the scheduled email
   const scheduledEmail = await prisma.scheduledEmail.create({
     data: {
       campaignId: campaign.id,
@@ -186,7 +184,7 @@ async function scheduleEmailForLead(
     },
   });
 
-  // Queue for generation
+  // Kick off generation
   await emailGenerationQueue.add("generate", {
     scheduledEmailId: scheduledEmail.id,
   });

@@ -67,12 +67,16 @@ model Lead {
   firstName       String
   lastName        String?
   metadata        Json?            // Extra fields: company, phone, etc.
-  campaignId      String
-  campaign        Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId      String?          // Made optional
+  campaign        Campaign?        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   createdAt       DateTime         @default(now())
   scheduledEmails ScheduledEmail[]
 
-  @@unique([email, campaignId])
+  // Removed unique constraint on [email, campaignId] because campaignId is now nullable
+  // Added unique constraint on email if we want unique emails globally or per campaign?
+  // For now, let's keep email unique per campaign if campaignId exists, but allow duplicates if not assigned?
+  // Actually, simpler to just allow multiple leads with same email if they are in different campaigns or one unassigned.
+  
   @@index([campaignId])
 }
 
@@ -96,4 +100,3 @@ model ScheduledEmail {
   @@index([status, scheduledFor])
   @@index([campaignId, status])
 }
-

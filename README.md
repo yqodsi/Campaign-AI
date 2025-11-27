@@ -1,32 +1,45 @@
-# Email Campaign Automation - MVP
+# Campaign AI - Email Automation Platform
 
-A SaaS application for automated, AI-powered email campaigns.
+A modern SaaS application for automated, AI-powered email campaigns with intelligent scheduling and personalization.
 
-## Features
+## ✨ Features
 
-- ✅ Create email campaigns with daily/weekly schedules
-- ✅ Configure duration, timezone, and AI agent per campaign
-- ✅ Add leads manually or import via CSV
-- ✅ AI-generated email content using OpenAI
-- ✅ Pause/Resume/Cancel campaigns
-- ✅ Idempotent email scheduling (no duplicates)
-- ✅ Background job processing with BullMQ
+- 🤖 **AI-Powered Content** - Generate personalized emails using OpenAI
+- 📅 **Smart Scheduling** - Daily/weekly schedules with timezone support
+- 👥 **Lead Management** - Manual entry or CSV import
+- 🎯 **Campaign Control** - Start, pause, resume, or cancel campaigns
+- 📊 **Real-time Dashboard** - Monitor campaigns and email performance
+- 🔄 **Background Processing** - Reliable job queue with BullMQ
+- 🎨 **Modern UI** - Beautiful interface built with shadcn/ui
 
-## Quick Start (Docker)
+## 🚀 Quick Start
+
+### Fast Test Run
 
 ```bash
-# 1. Clone and setup
+docker-compose down -v
+docker-compose up --build
+```
+
+### Using Docker (Recommended)
+
+```bash
+# 1. Clone the repository
+git clone <your-repo-url>
+cd campaign-ai
+
+# 2. Setup environment
 cp .env.example .env
 # Edit .env and add your OPENAI_API_KEY
 
-# 2. Start everything
+# 3. Start all services
 docker-compose up --build
 
-# 3. Open browser
-open http://localhost:3000
+# 4. Open in browser
+http://localhost:3000
 ```
 
-## Development (Local)
+### Local Development
 
 ```bash
 # 1. Install dependencies
@@ -34,144 +47,176 @@ npm install
 
 # 2. Setup environment
 cp .env.example .env
-# Edit .env with your configuration
+# Configure DATABASE_URL, REDIS_URL, and OPENAI_API_KEY
 
-# 3. Start PostgreSQL and Redis (or use Docker)
-# PostgreSQL should be running on localhost:5432
-# Redis should be running on localhost:6379
+# 3. Start PostgreSQL and Redis
+# Ensure PostgreSQL is running on localhost:5432
+# Ensure Redis is running on localhost:6379
 
-# 4. Run migrations and seed
+# 4. Run database migrations
 npx prisma migrate dev
-npx prisma db seed
 
 # 5. Start development servers
 npm run dev:all
-# This starts both Next.js dev server and BullMQ worker
+# This starts both Next.js and the BullMQ worker
 ```
 
-## Architecture
+## 📖 How It Works
 
-### Scalability Considerations
+1. **Create AI Agents** - Define personality and writing style
+2. **Create Campaigns** - Set schedule, timezone, and duration
+3. **Add Leads** - Import from CSV or add manually
+4. **Start Campaign** - Activate and let AI handle the rest
+5. **Monitor Progress** - Track emails generated and sent
 
-1. **Queue-based processing**: BullMQ with Redis ensures reliable job processing
-2. **Idempotency**: Unique constraints prevent duplicate emails
-3. **Worker separation**: Workers run as separate processes, can scale horizontally
-4. **Database indexes**: Optimized queries for status and date filtering
+## 🏗️ Tech Stack
 
-### For Production
+- **Frontend**: Next.js 14 (App Router), React, Tailwind CSS
+- **UI Components**: shadcn/ui, Radix UI
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL with Prisma ORM
+- **Queue**: Redis + BullMQ
+- **AI**: OpenAI GPT-4
+- **Deployment**: Docker
 
-- Add connection pooling (PgBouncer)
-- Use Redis Cluster for high availability
-- Deploy workers on separate containers/pods
-- Add rate limiting for OpenAI API calls
-- Implement proper email service (SendGrid, Resend)
-- Add authentication and authorization
-- Implement proper error monitoring (Sentry, etc.)
+## 📁 Project Structure
 
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/campaigns | List campaigns |
-| POST | /api/campaigns | Create campaign |
-| GET | /api/campaigns/:id | Get campaign |
-| PATCH | /api/campaigns/:id | Update campaign |
-| DELETE | /api/campaigns/:id | Delete campaign |
-| POST | /api/campaigns/:id/start | Activate campaign |
-| POST | /api/campaigns/:id/pause | Pause campaign |
-| POST | /api/campaigns/:id/resume | Resume campaign |
-| POST | /api/campaigns/:id/cancel | Cancel campaign |
-| GET | /api/campaigns/:id/leads | List leads |
-| POST | /api/campaigns/:id/leads | Add lead |
-| POST | /api/campaigns/:id/leads/import | CSV import |
-| DELETE | /api/campaigns/:id/leads/:leadId | Delete lead |
-| GET | /api/agents | List AI agents |
-| POST | /api/agents | Create AI agent |
-| GET | /api/agents/:id | Get agent |
-| PATCH | /api/agents/:id | Update agent |
-| DELETE | /api/agents/:id | Delete agent |
-| POST | /api/emails/:id/regenerate | Regenerate email |
-| POST | /api/emails/:id/approve | Approve and send email |
-| POST | /api/cron/process | Trigger campaign processing |
-
-## Tech Stack
-
-- Next.js 14 (App Router)
-- PostgreSQL + Prisma
-- Redis + BullMQ
-- OpenAI API
-- Tailwind CSS + shadcn/ui
-- Docker
-
-## Testing the Flow
-
-1. Create an AI Agent with a system prompt
-2. Create a Campaign, select the agent, set schedule
-3. Add leads to the campaign
-4. Start the campaign
-5. Watch emails get generated and "sent" in logs
-
-## Manual Cron Trigger
-
-For testing, you can manually trigger the campaign processor:
-
-```bash
-curl -X POST http://localhost:3000/api/cron/process
+```
+├── app/
+│   ├── api/              # API routes
+│   ├── campaigns/        # Campaign pages
+│   ├── agents/          # AI agent management
+│   ├── leads/           # Lead management
+│   └── page.tsx         # Dashboard
+├── components/
+│   ├── ui/              # shadcn/ui components
+│   ├── app-sidebar.tsx  # Navigation sidebar
+│   └── site-header.tsx  # Header component
+├── lib/
+│   ├── services/        # Business logic
+│   ├── validations/     # Zod schemas
+│   └── constants/       # App constants
+├── prisma/
+│   └── schema.prisma    # Database schema
+└── worker.ts           # Background job processor
 ```
 
-Or with authentication (if CRON_SECRET is set):
+## 🔧 Environment Variables
 
-```bash
-curl -X POST http://localhost:3000/api/cron/process \
-  -H "Authorization: Bearer your-secret-key"
+Create a `.env` file with the following variables:
+
+```env
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/campaign_ai"
+
+# Redis
+REDIS_URL="redis://localhost:6379"
+
+# OpenAI
+OPENAI_API_KEY="sk-..."
+
+# App
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+# Optional: Cron authentication
+CRON_SECRET="your-secret-key"
 ```
 
-## Database Management
+## 🔌 API Endpoints
+
+### Campaigns
+
+- `GET /api/campaigns` - List all campaigns
+- `POST /api/campaigns` - Create new campaign
+- `GET /api/campaigns/:id` - Get campaign details
+- `PATCH /api/campaigns/:id` - Update campaign
+- `DELETE /api/campaigns/:id` - Delete campaign
+- `POST /api/campaigns/:id/start` - Start campaign
+- `POST /api/campaigns/:id/pause` - Pause campaign
+- `POST /api/campaigns/:id/resume` - Resume campaign
+- `POST /api/campaigns/:id/cancel` - Cancel campaign
+
+### Leads
+
+- `GET /api/leads` - List all leads
+- `POST /api/leads` - Create lead
+- `POST /api/leads/import` - Import leads from CSV
+- `GET /api/campaigns/:id/leads` - Get campaign leads
+- `POST /api/campaigns/:id/leads` - Add lead to campaign
+- `DELETE /api/campaigns/:id/leads/:leadId` - Remove lead
+
+### AI Agents
+
+- `GET /api/agents` - List AI agents
+- `POST /api/agents` - Create AI agent
+- `GET /api/agents/:id` - Get agent details
+- `PATCH /api/agents/:id` - Update agent
+- `DELETE /api/agents/:id` - Delete agent
+
+### Emails
+
+- `POST /api/emails/:id/regenerate` - Regenerate email content
+- `POST /api/emails/:id/approve` - Approve and send email
+
+### System
+
+- `GET /api/dashboard` - Dashboard statistics
+- `POST /api/cron/process` - Trigger campaign processing
+
+## 🧪 Testing
+
+Visit `/test` in your browser to access the scheduler test tool:
+
+- **Quick Test** - Schedule test emails for the next 15 minutes
+- **Simulation** - Preview what emails would be scheduled
+
+## 📊 Database Management
 
 ```bash
-# View database in Prisma Studio
+# Open Prisma Studio
 npm run db:studio
 
-# Create a new migration
+# Create migration
 npm run db:migrate
 
-# Seed the database
-npm run db:seed
+# Reset database (development only)
+npx prisma migrate reset
 ```
 
-## Project Structure
+## 🚀 Production Deployment
 
+### Recommendations
+
+1. **Database**: Use managed PostgreSQL (AWS RDS, Supabase, etc.)
+2. **Redis**: Use Redis Cloud or AWS ElastiCache
+3. **Workers**: Deploy as separate containers/pods
+4. **Email Service**: Integrate SendGrid, Resend, or AWS SES
+5. **Monitoring**: Add Sentry for error tracking
+6. **Authentication**: Implement NextAuth.js or similar
+7. **Rate Limiting**: Add rate limiting for API endpoints
+
+### Docker Production Build
+
+```bash
+# Build production image
+docker build -t campaign-ai .
+
+# Run with production settings
+docker run -p 3000:3000 --env-file .env.production campaign-ai
 ```
-├── app/                    # Next.js app directory
-│   ├── api/               # API routes
-│   ├── campaigns/         # Campaign pages
-│   ├── agents/           # Agent pages
-│   └── page.tsx          # Dashboard
-├── components/           # React components
-│   ├── ui/               # shadcn/ui components
-│   ├── campaigns/        # Campaign components
-│   ├── leads/            # Lead components
-│   └── agents/           # Agent components
-├── lib/                  # Library code
-│   ├── services/         # Business logic
-│   ├── validations/      # Zod schemas
-│   └── constants/        # Constants
-├── prisma/               # Prisma schema and migrations
-└── worker.ts            # BullMQ worker (runs separately)
-```
 
-## Environment Variables
+## 🤝 Contributing
 
-See `.env.example` for all required environment variables:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-- `DATABASE_URL`: PostgreSQL connection string
-- `REDIS_URL`: Redis connection string
-- `OPENAI_API_KEY`: OpenAI API key
-- `CRON_SECRET`: Secret for cron endpoint authentication (optional)
-- `NEXT_PUBLIC_APP_URL`: Public URL of the app
+## 📄 License
 
-## License
+MIT License - see LICENSE file for details
 
-MIT
+## 🙏 Acknowledgments
 
-# email_automation
+- [Next.js](https://nextjs.org/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Prisma](https://www.prisma.io/)
+- [BullMQ](https://docs.bullmq.io/)
+- [OpenAI](https://openai.com/)
