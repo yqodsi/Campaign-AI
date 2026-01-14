@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { updateCampaignSchema } from '@/lib/validations/campaign';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/campaigns/[id]
 export async function GET(
   request: NextRequest,

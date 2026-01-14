@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processActiveCampaigns } from "@/lib/services/email-scheduler.service";
 
+export const dynamic = 'force-dynamic';
+
 // This route supports external crons, the worker heartbeat, or a manual click.
 
 export async function GET(request: NextRequest) {

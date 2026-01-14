@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createAgentSchema } from '@/lib/validations/agent';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/agents
 export async function GET(request: NextRequest) {
   const agents = await prisma.aIAgent.findMany({

@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { updateAgentSchema } from '@/lib/validations/agent';
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { updateAgentSchema } from "@/lib/validations/agent";
+
+export const dynamic = "force-dynamic";
 
 // GET /api/agents/[id]
 export async function GET(
@@ -15,7 +17,7 @@ export async function GET(
   });
 
   if (!agent) {
-    return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+    return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
 
   return NextResponse.json(agent);
@@ -35,7 +37,7 @@ export async function PATCH(
     });
 
     if (!agent) {
-      return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
     const updated = await prisma.aIAgent.update({
@@ -45,10 +47,16 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error: any) {
-    if (error.name === 'ZodError') {
-      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 });
+    if (error.name === "ZodError") {
+      return NextResponse.json(
+        { error: "Validation failed", details: error.errors },
+        { status: 400 }
+      );
     }
-    return NextResponse.json({ error: 'Failed to update agent' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update agent" },
+      { status: 500 }
+    );
   }
 }
 
@@ -62,7 +70,7 @@ export async function DELETE(
   });
 
   if (!agent) {
-    return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+    return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
 
   await prisma.aIAgent.delete({
@@ -71,4 +79,3 @@ export async function DELETE(
 
   return NextResponse.json({ success: true });
 }
-

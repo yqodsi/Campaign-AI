@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const leadSchema = z.object({
   email: z.string().email(),
   firstName: z.string().min(1),
@@ -61,7 +63,7 @@ export async function POST(request: NextRequest) {
             email: validated.email,
             firstName: validated.firstName,
             lastName: validated.lastName || null,
-            metadata: Object.keys(metadata).length > 0 ? metadata : null,
+            metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
             campaignId: null, // Keep unassigned for now
           },
         });

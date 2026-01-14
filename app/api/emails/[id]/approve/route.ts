@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { emailSendingQueue } from "@/lib/queue";
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/emails/[id]/approve
 export async function POST(
   request: NextRequest,

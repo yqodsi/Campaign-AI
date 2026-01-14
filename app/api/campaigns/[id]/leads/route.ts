@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createLeadSchema } from '@/lib/validations/lead';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/campaigns/[id]/leads
 export async function GET(
   request: NextRequest,
