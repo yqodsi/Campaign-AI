@@ -101,7 +101,7 @@ export async function POST(
               email: validated.email,
               firstName: validated.firstName,
               lastName: validated.lastName || null,
-              metadata: Object.keys(metadata).length ? metadata : null,
+              metadata: Object.keys(metadata).length ? metadata : undefined,
               campaignId: params.id,
             },
           });
